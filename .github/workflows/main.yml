@@ -49,9 +49,17 @@ jobs:
           echo "Latest run_id: $RUN_ID"
           
       # Build Docker Model
-      - name: Build Docker Model
+      - name: Generate Dockerfile
         run: |
-          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "cc" 
+          mlflow models generate-dockerfile --model-uri "$MODEL_URI" --output-directory credit_scoring_docker
+
+      - name: Fix get-pip for Python 3.9
+        run: |
+          sed -i 's|https://bootstrap.pypa.io/get-pip.py|https://bootstrap.pypa.io/pip/3.9/get-pip.py|g' credit_scoring_docker/Dockerfile
+      
+      - name: Build Docker Image
+        run: |
+          docker build -t cc credit_scoring_docker
 
       # Login to Docker Hub
       - name: Log in to Docker Hub
