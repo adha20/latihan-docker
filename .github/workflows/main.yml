@@ -44,7 +44,15 @@ jobs:
       # Get latest run_id
       - name: Get latest MLflow run_id
         run: |
-          RUN_ID=$(ls -td mlruns/0/*/ | head -n 1 | cut -d'/' -f3)
+          RUN_ID=$(find mlruns -mindepth 2 -maxdepth 2 -type d -regextype posix-extended -regex '.*/[0-9a-f]{32}$' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2- | xargs -r basename)
+      
+          if [ -z "$RUN_ID" ]; then
+            echo "No MLflow run_id found."
+            echo "Debug mlruns structure:"
+            find mlruns -maxdepth 4 -type d || true
+            exit 1
+          fi
+      
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "Latest run_id: $RUN_ID"
           
